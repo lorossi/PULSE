@@ -1,44 +1,70 @@
 class Sketch extends Engine {
   preload() {
+    // parameters
     this._spacing = 10;
-    this._rect_side = 25;
+    this._rect_side = 22;
     this._temp_canvas_size = 150;
     this._duration = 600;
     this._channel = 240;
-    this.loadTextPixels();
+    this._recording = false;
+    // this needs to be done only once
+    this._loadTextPixels();
   }
 
   setup() {
-
+    // sketch setup
+    console.clear();
+    // setup capturer
+    if (this._recording) {
+      this._capturer = new CCapture({ format: "png" });
+      this._capturer_started = false;
+    }
   }
 
   draw() {
+    if (!this._capturer_started && this._recording) {
+      this._capturer_started = true;
+      this._capturer.start();
+      console.log("%c Recording started", "color: green; font-size: 2rem");
+    }
+
     const percent = (this.frameCount % this._duration) / this._duration;
     //const percent = 0.5;
 
     this.ctx.save();
-    this.ctx.fillStyle = "rgb(25, 25, 25)";
+    // clear background
+    this.ctx.fillStyle = "rgb(35, 35, 35)";
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     for (let y = 0; y < this.height; y += this._spacing) {
+      // check if this line is over the text
       const line_picked = this._pixels.filter(p => Math.abs(p.y - y) < this._temp_canvas_ratio);
       for (let x = 0; x < this.width; x += this._spacing) {
+        // check if this pixels is over the text
         const close = line_picked.some(p => Math.abs(p.x - x) < this._temp_canvas_ratio);
         if (close) {
+          // pixel position relative to the max distance between two pixels
           const pixel_dist = dist(x, y, this.width / 2, this.height / 2) / this._max_dist;
+          // gives motion relative to position
           const phi = pixel_dist * Math.PI;
-          const omega = 4 * Math.PI;
-
+          // gives motion relative to time
+          const omega = 2 * Math.PI;
+          // context rotation, emulates movement
           const gamma = Math.atan2(y - this.height / 2, x - this.width / 2);
+          // trigonometric function called many times below
           const trig = Math.abs(Math.cos(-phi + omega * percent));
-
+          // length of the rect of the side
           const side = trig * this._rect_side;
-          const color_blend = 0.7;
+          // position displacement
+          const dpos = ease(trig) * this._rect_side * pixel_dist * 2;
+          // channel (white amount) changes over time
+          const color_blend = 0.5;
           const color = trig * this._channel * color_blend + this._channel * (1 - color_blend);
-          const dpos = ease(trig) * this._rect_side * 0.2 * pixel_dist;
-          const alpha_blend = 0.7;
+          // alpha (transparency) changes over time
+          const alpha_blend = 0.8;
           const alpha = trig * alpha_blend + (1 - alpha_blend);
-          const aberration_offset = 3 * (1 - trig);
+          // offset position variation changes over time
+          const aberration_offset = 5 * (1 - trig);
 
           this.ctx.save();
           this.ctx.translate(x + side / 2, y + side / 2);
@@ -48,14 +74,15 @@ class Sketch extends Engine {
 
           this.ctx.globalCompositeOperation = "screen";
 
+          // draw main rect
           this.ctx.fillStyle = `rgb(${color}, ${color}, ${color}, ${alpha})`;
           this.ctx.fillRect(-side / 2, -side / 2, side / 2, side / 2);
-
-          this.ctx.fillStyle = "rgb(255, 0, 0)";
+          // add chromatic aberration effect
+          this.ctx.fillStyle = "rgba(255, 0, 0, 0.9)";
           this.ctx.fillRect(-side / 2 - aberration_offset / 2, -side / 2 - aberration_offset / 2, side / 2, side / 2);
-          this.ctx.fillStyle = "rgb(255, 255, 0)";
+          this.ctx.fillStyle = "rgba(0, 255, 0, 0.9)";
           this.ctx.fillRect(-side / 2 + aberration_offset / 2, -side / 2 - aberration_offset / 2, side / 2, side / 2);
-          this.ctx.fillStyle = "rgb(0, 0, 255)";
+          this.ctx.fillStyle = "rgba(0, 0, 255, 0.9)";
           this.ctx.fillRect(-side / 2, -side / 2 + aberration_offset, side / 2, side / 2);
 
           this.ctx.restore();
@@ -65,10 +92,20 @@ class Sketch extends Engine {
 
     this.ctx.restore();
 
-    if (this.frameCount % 120 == 0) console.log(this.frameRate);
+    // handle recording
+    if (this._recording) {
+      if (this._frameCount < this._duration) {
+        this._capturer.capture(this._canvas);
+      } else {
+        this._recording = false;
+        this._capturer.stop();
+        this._capturer.save();
+        console.log("%c Recording ended", "color: red; font-size: 2rem");
+      }
+    }
   }
 
-  loadTextPixels() {
+  _loadTextPixels() {
     // temp canvas parameters
     const height = this._temp_canvas_size;
     const width = this._temp_canvas_size;
