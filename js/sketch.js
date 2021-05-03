@@ -1,12 +1,10 @@
 class Sketch extends Engine {
   preload() {
-    this._spacing = 8;
-    this._circle_radius = this._spacing * 0.5;
-    this._temp_canvas_size = 500;
-    this._duration = 300;
+    this._spacing = 10;
+    this._rect_side = 25;
+    this._temp_canvas_size = 150;
+    this._duration = 600;
     this._channel = 240;
-    this._alpha = 1;
-
     this.loadTextPixels();
   }
 
@@ -19,7 +17,7 @@ class Sketch extends Engine {
     //const percent = 0.5;
 
     this.ctx.save();
-    this.ctx.fillStyle = "rgb(15, 15, 15)";
+    this.ctx.fillStyle = "rgb(25, 25, 25)";
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     for (let y = 0; y < this.height; y += this._spacing) {
@@ -29,24 +27,37 @@ class Sketch extends Engine {
         if (close) {
           const pixel_dist = dist(x, y, this.width / 2, this.height / 2) / this._max_dist;
           const phi = pixel_dist * Math.PI;
-          const omega = 8 * Math.PI;
+          const omega = 4 * Math.PI;
 
           const gamma = Math.atan2(y - this.height / 2, x - this.width / 2);
-          const trig = Math.cos(-phi + omega * percent);
+          const trig = Math.abs(Math.cos(-phi + omega * percent));
 
-          const r = Math.abs(trig * this._circle_radius);
-          const blend = 0.5;
-          const color = Math.abs(trig) * this._channel * blend + this._channel * (1 - blend);;
-          const dpos = trig * this._circle_radius * 0.5;
+          const side = trig * this._rect_side;
+          const color_blend = 0.7;
+          const color = trig * this._channel * color_blend + this._channel * (1 - color_blend);
+          const dpos = ease(trig) * this._rect_side * 0.2 * pixel_dist;
+          const alpha_blend = 0.7;
+          const alpha = trig * alpha_blend + (1 - alpha_blend);
+          const aberration_offset = 3 * (1 - trig);
 
           this.ctx.save();
-          this.ctx.translate(x, y);
+          this.ctx.translate(x + side / 2, y + side / 2);
           this.ctx.rotate(gamma);
           this.ctx.translate(dpos, 0);
-          this.ctx.fillStyle = `rgb(${color}, ${color}, ${color}, ${this._alpha})`;
-          this.ctx.beginPath();
-          this.ctx.arc(0, 0, r, 0, 2 * Math.PI);
-          this.ctx.fill();
+          this.ctx.rotate(-gamma);
+
+          this.ctx.globalCompositeOperation = "screen";
+
+          this.ctx.fillStyle = `rgb(${color}, ${color}, ${color}, ${alpha})`;
+          this.ctx.fillRect(-side / 2, -side / 2, side / 2, side / 2);
+
+          this.ctx.fillStyle = "rgb(255, 0, 0)";
+          this.ctx.fillRect(-side / 2 - aberration_offset / 2, -side / 2 - aberration_offset / 2, side / 2, side / 2);
+          this.ctx.fillStyle = "rgb(255, 255, 0)";
+          this.ctx.fillRect(-side / 2 + aberration_offset / 2, -side / 2 - aberration_offset / 2, side / 2, side / 2);
+          this.ctx.fillStyle = "rgb(0, 0, 255)";
+          this.ctx.fillRect(-side / 2, -side / 2 + aberration_offset, side / 2, side / 2);
+
           this.ctx.restore();
         }
       }
@@ -120,3 +131,5 @@ const distSq = (x1, y1, x2, y2) => {
 const dist = (x1, y1, x2, y2) => {
   return Math.sqrt(distSq(x1, y1, x2, y2));
 };
+
+const ease = x => Math.pow(x, 5);
