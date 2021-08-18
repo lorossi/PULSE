@@ -5,7 +5,7 @@ class Sketch extends Engine {
     this._rect_side = 22;
     this._temp_canvas_size = 150;
     this._duration = 600;
-    this._channel = 240;
+    this._channel = 230;
     this._recording = false;
     // this needs to be done only once
     this._loadTextPixels();
@@ -33,7 +33,7 @@ class Sketch extends Engine {
 
     this.ctx.save();
     // clear background
-    this.ctx.fillStyle = "rgb(35, 35, 35)";
+    this.ctx.fillStyle = "rgb(15, 15, 15)";
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     for (let y = 0; y < this.height; y += this._spacing) {
@@ -78,11 +78,11 @@ class Sketch extends Engine {
           this.ctx.fillStyle = `rgb(${color}, ${color}, ${color}, ${alpha})`;
           this.ctx.fillRect(-side / 2, -side / 2, side / 2, side / 2);
           // add chromatic aberration effect
-          this.ctx.fillStyle = "rgba(255, 0, 0, 0.9)";
+          this.ctx.fillStyle = "rgba(230, 0, 0, 0.9)";
           this.ctx.fillRect(-side / 2 - aberration_offset / 2, -side / 2 - aberration_offset / 2, side / 2, side / 2);
-          this.ctx.fillStyle = "rgba(0, 255, 0, 0.9)";
+          this.ctx.fillStyle = "rgba(0, 230, 0, 0.9)";
           this.ctx.fillRect(-side / 2 + aberration_offset / 2, -side / 2 - aberration_offset / 2, side / 2, side / 2);
-          this.ctx.fillStyle = "rgba(0, 0, 255, 0.9)";
+          this.ctx.fillStyle = "rgba(0, 0, 230, 0.9)";
           this.ctx.fillRect(-side / 2, -side / 2 + aberration_offset, side / 2, side / 2);
 
           this.ctx.restore();
