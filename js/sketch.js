@@ -6,7 +6,8 @@ class Sketch extends Engine {
     this._temp_canvas_size = 150;
     this._duration = 600;
     this._channel = 230;
-    this._recording = false;
+    this._scale = 0.85;
+    this._recording = true;
     // this needs to be done only once
     this._loadTextPixels();
   }
@@ -35,6 +36,10 @@ class Sketch extends Engine {
     // clear background
     this.ctx.fillStyle = "rgb(15, 15, 15)";
     this.ctx.fillRect(0, 0, this.width, this.height);
+    // factor for border
+    this.ctx.translate(this.width/2, this.height/2);
+    this.ctx.scale(this._scale, this._scale);
+    this.ctx.translate(-this.width/2, -this.height/2);
 
     for (let y = 0; y < this.height; y += this._spacing) {
       // check if this line is over the text
